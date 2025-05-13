@@ -31,8 +31,8 @@
   <div id="controls">
     <label for="algo">Algorithm:</label>
     <select id="algo">
-      <option value="colorfill">Color-Influenced Fill</option>
       <option value="dla">Crystal Growth</option>
+      <option value="colorfill">Color-Influenced Fill</option>
     </select>
   </div>
   <canvas id="canvas"></canvas>
@@ -63,6 +63,228 @@
         alert('algo not implemented yet: ' + algo);
       }
     });
+
+    // --- Algorithm 1: Diffusion-Limited Aggregation (Crystal Growth) ---
+    function runDLA(seedX, seedY) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const img = ctx.getImageData(0, 0, w, h); 
+      const visited = new Set(); // Stores "x,y" for DLA particles
+
+      let aggregatedParticlesCount = 0;
+      // Stop when 20% of canvas is filled by DLA, or 10k particles, whichever is smaller
+      // const MAX_PARTICLES = Math.min(Math.floor((w * h) * 0.20), 10000); 
+      const MAX_PARTICLES = w * h;
+      console.log("MAX_PARTICLES", MAX_PARTICLES);
+      const MAX_WALKER_STEPS = Math.max(w,h) * 5; // Max steps before a walker is considered lost
+      
+      const PARTICLES_PER_FRAME = 100; // Number of walkers to process per animation frame
+      const MAX_CONSECUTIVE_SPAWN_FAILS_TOTAL = 10000; // If 300 total spawn attempts fail in a row, stop.
+      let consecutiveSpawnFails = 0;
+      let particlesSinceLastDraw = 0; // Counter for particles since last draw
+      const DRAW_INTERVAL = 1; // Draw after this many particles are added
+
+
+      // --- Color generation (adapted from runColorFill) ---
+      const DLA_SIMILARITY_PERCENT = 0.90; 
+      const DLA_SIMILAR_VARIATION = 20;   
+      const DLA_DISSIMILAR_VARIATION = 50;
+
+      function getDlaNeighborColors(x, y) {
+        const colors = [];
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h && visited.has(`${nx},${ny}`)) {
+              const idx = (ny * w + nx) * 4;
+              colors.push({
+                r: img.data[idx],
+                g: img.data[idx + 1],
+                b: img.data[idx + 2]
+              });
+            }
+          }
+        }
+        return colors;
+      }
+
+      function generateDlaInfluencedColor(neighborColors) {
+        if (neighborColors.length === 0) {
+          return { 
+            r: Math.random() * 255,
+            g: Math.random() * 255,
+            b: Math.random() * 255
+          };
+        }
+        
+        const avg = neighborColors.reduce((acc, col) => ({
+          r: acc.r + col.r / neighborColors.length,
+          g: acc.g + col.g / neighborColors.length,
+          b: acc.b + col.b / neighborColors.length
+        }), { r: 0, g: 0, b: 0 });
+        
+        let useSimilar = Math.random() < DLA_SIMILARITY_PERCENT;
+        const variation = useSimilar ? DLA_SIMILAR_VARIATION : DLA_DISSIMILAR_VARIATION;
+        
+        return {
+          r: Math.min(255, Math.max(0, avg.r + (Math.random() - 0.5) * variation * 2)),
+          g: Math.min(255, Math.max(0, avg.g + (Math.random() - 0.5) * variation * 2)),
+          b: Math.min(255, Math.max(0, avg.b + (Math.random() - 0.5) * variation * 2))
+        };
+      }
+      // --- End Color generation ---
+
+      function paintPixel(x, y, color) {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+        const idx = (y * w + x) * 4;
+        img.data[idx] = color.r;
+        img.data[idx + 1] = color.g;
+        img.data[idx + 2] = color.b;
+        img.data[idx + 3] = 255; 
+      }
+
+      if (seedX < 0 || seedX >= w || seedY < 0 || seedY >= h) {
+          console.error("DLA seed is out of bounds.");
+          return;
+      }
+      
+      // Clear canvas with white before starting new DLA
+      // ctx.fillStyle = '#fff'; // Assuming global ctx is fine
+      // ctx.fillRect(0, 0, w, h);
+      // for (let i = 0; i < img.data.length; i += 4) {
+      //    img.data[i] = 255; img.data[i+1] = 255; img.data[i+2] = 255; img.data[i+3] = 255;
+      // }
+      // Decided against auto-clearing; DLA will draw on existing canvas. Seed point will be fresh.
+
+      const seedColor = generateDlaInfluencedColor([]); 
+      paintPixel(seedX, seedY, seedColor);
+      visited.add(`${seedX},${seedY}`);
+      aggregatedParticlesCount++;
+      
+      let animationFrameId = null;
+
+      function animationStep() {
+        if (aggregatedParticlesCount >= MAX_PARTICLES) {
+          console.log("DLA finished: Max particles reached.");
+          if (animationFrameId) cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+          ctx.putImageData(img, 0, 0); 
+          return;
+        }
+
+        if (consecutiveSpawnFails >= MAX_CONSECUTIVE_SPAWN_FAILS_TOTAL) {
+            console.log("DLA finished: Too many consecutive spawn failures.");
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            ctx.putImageData(img, 0, 0);
+            return;
+        }
+        
+        let particlesAddedThisFrame = 0;
+
+        for (let i = 0; i < PARTICLES_PER_FRAME; i++) {
+            if (aggregatedParticlesCount >= MAX_PARTICLES) break;
+
+            let walkerX, walkerY;
+            let spawnedSuccessfully = false;
+            const MAX_ATTEMPTS_PER_WALKER_SPAWN = 200; 
+
+            for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_WALKER_SPAWN; attempt++) {
+                walkerX = Math.floor(Math.random() * w);
+                walkerY = Math.floor(Math.random() * h);
+                if (!visited.has(`${walkerX},${walkerY}`)) {
+                    spawnedSuccessfully = true;
+                    consecutiveSpawnFails = 0; // Reset counter as one walker spawned
+                    break;
+                }
+            }
+
+            if (!spawnedSuccessfully) {
+                consecutiveSpawnFails++; // Increment for this particle's failed spawn attempt
+                continue; // Try to process/spawn the next particle in this frame's batch
+            }
+            
+            let currentWalkerSteps = 0;
+            // Walker's random walk loop
+            while (currentWalkerSteps < MAX_WALKER_STEPS) {
+                currentWalkerSteps++;
+
+                let isAdjacentToAggregate = false;
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const nx = walkerX + dx;
+                        const ny = walkerY + dy;
+                        if (nx >= 0 && nx < w && ny >= 0 && ny < h && visited.has(`${nx},${ny}`)) {
+                            isAdjacentToAggregate = true;
+                            break;
+                        }
+                    }
+                    if (isAdjacentToAggregate) break;
+                }
+
+                if (isAdjacentToAggregate) {
+                    // Walker sticks at (walkerX, walkerY) which is currently unvisited
+                    const neighborColors = getDlaNeighborColors(walkerX, walkerY);
+                    const newColor = generateDlaInfluencedColor(neighborColors);
+                    paintPixel(walkerX, walkerY, newColor);
+                    visited.add(`${walkerX},${walkerY}`);
+                    aggregatedParticlesCount++;
+                    particlesAddedThisFrame++;
+                    particlesSinceLastDraw++; // Increment for draw interval
+                    break; // Walker stuck, its life ends
+                }
+
+                const moveDx = Math.floor(Math.random() * 3) - 1;
+                const moveDy = Math.floor(Math.random() * 3) - 1;
+
+                if (moveDx === 0 && moveDy === 0) continue; // No move, try new step
+
+                const nextX = walkerX + moveDx;
+                const nextY = walkerY + moveDy;
+
+                if (nextX < 0 || nextX >= w || nextY < 0 || nextY >= h) { // Hit boundary
+                    break; // Walker lost
+                }
+
+                if (visited.has(`${nextX},${nextY}`)) { // Tried to move into existing aggregate
+                    break; // Walker lost
+                }
+                
+                walkerX = nextX; // Move to new unvisited position
+                walkerY = nextY;
+            } // End of walker's random walk loop
+        } // End of PARTICLES_PER_FRAME loop
+
+        // NEW logic: Update canvas only after DRAW_INTERVAL particles have been added
+        if (particlesSinceLastDraw >= DRAW_INTERVAL) {
+            ctx.putImageData(img, 0, 0);
+            particlesSinceLastDraw = 0; // Reset counter
+        }
+
+        if (aggregatedParticlesCount < MAX_PARTICLES && consecutiveSpawnFails < MAX_CONSECUTIVE_SPAWN_FAILS_TOTAL) {
+            animationFrameId = requestAnimationFrame(animationStep);
+        } else {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+            ctx.putImageData(img, 0, 0); 
+            if(aggregatedParticlesCount >= MAX_PARTICLES) console.log("DLA finished: Max particles reached (final check).");
+            else console.log("DLA finished: Too many spawn failures (final check).");
+        }
+      } 
+
+      // If another DLA animation is running, cancel it.
+      // This needs a global or closure-scoped variable if runDLA can be called multiple times.
+      // For simplicity, we assume one DLA process at a time, new call starts new process.
+      // A more robust solution would be:
+      // if (window.currentDlaAnimationId) cancelAnimationFrame(window.currentDlaAnimationId);
+      // window.currentDlaAnimationId = requestAnimationFrame(animationStep);
+      // animationFrameId = window.currentDlaAnimationId;
+      
+      // Simple start:
+      animationFrameId = requestAnimationFrame(animationStep);
+    }
 
     // --- Algorithm 2: Color-Influenced Random Fill ---
     function runColorFill(seedX, seedY) {
@@ -212,118 +434,6 @@
         }
       }
       step();
-    }
-
-    // --- Algorithm 1: Diffusion-Limited Aggregation (Crystal Growth) ---
-    function runDLA(seedX, seedY) {
-      // Ensure coordinates are within bounds
-      seedX = Math.max(0, Math.min(400 - 1, Math.floor(seedX)));
-      seedY = Math.max(0, Math.min(400 - 1, Math.floor(seedY)));
-      
-      const img = ctx.getImageData(0, 0, 400, 400);
-      const w = 400, h = 400;
-      const cluster = new Set([seedY * w + seedX]);
-      const toIndex = (px,py) => py*w + px;
-      const fromIndex = idx => [idx % w, Math.floor(idx / w)];
-      
-      // Track the max radius for walker spawn
-      let maxDist = 1;
-      
-      // Seed a small cluster for denser start
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-        const nx = seedX + dx, ny = seedY + dy;
-        if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-          cluster.add(ny * w + nx);
-        }
-      }
-      
-      function dist2(x, y) {
-        return (x - seedX) * (x - seedX) + (y - seedY) * (y - seedY);
-      }
-      
-      // Spawn walkers on a full circle around the cluster
-      function randPos() {
-        const radius = Math.sqrt(maxDist) + 10;
-        const angle = Math.random() * 2 * Math.PI;
-        return {
-          x: Math.floor(seedX + Math.cos(angle) * radius),
-          y: Math.floor(seedY + Math.sin(angle) * radius)
-        };
-      }
-      
-      function step() {
-        let walker = randPos();
-        for (let i = 0; i < 2000; i++) {
-          // --- Bias: with 30% chance, step toward the seed ---
-          if (Math.random() < 0.3) {
-            if (walker.x < seedX) walker.x++;
-            else if (walker.x > seedX) walker.x--;
-            if (walker.y < seedY) walker.y++;
-            else if (walker.y > seedY) walker.y--;
-          } else {
-            // Unbiased random walk
-            walker.x += [-1, 0, 1][Math.floor(Math.random() * 3)];
-            walker.y += [-1, 0, 1][Math.floor(Math.random() * 3)];
-          }
-          walker.x = Math.max(0, Math.min(w - 1, walker.x));
-          walker.y = Math.max(0, Math.min(h - 1, walker.y));
-          const idx = toIndex(walker.x, walker.y);
-          // Kill and respawn if walker is too far from seed or at edge
-          const d2 = dist2(walker.x, walker.y);
-          if (walker.x === 0 || walker.x === w-1 || walker.y === 0 || walker.y === h-1 || d2 > (w/2)*(h/2)) {
-            walker = randPos();
-            continue;
-          }
-          // Check neighbors
-          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-            const nx = walker.x + dx, ny = walker.y + dy;
-            if (nx >= 0 && nx < w && ny >= 0 && ny < h &&
-                cluster.has(ny * w + nx) && Math.hypot(dx, dy) <= 1.5) {
-              // stick
-              // Paint a 3x3 block centered on the sticking point
-              for (let by = -1; by <= 1; by++) for (let bx = -1; bx <= 1; bx++) {
-                const px = walker.x + bx, py = walker.y + by;
-                const bidx = toIndex(px, py);
-                if (px >= 0 && px < w && py >= 0 && py < h && !cluster.has(bidx)) {
-                  cluster.add(bidx);
-                  const bd2 = dist2(px, py);
-                  if (bd2 > maxDist) maxDist = bd2;
-                  const distNorm = Math.sqrt(bd2) / (Math.sqrt(w * w + h * h) / 2);
-                  const hue = 240 - 240 * distNorm;
-                  const saturation = 80 + 20 * distNorm;
-                  const lightness = 50;
-                  // HSL to RGB
-                  const hueNorm = hue / 360;
-                  const s = saturation / 100;
-                  const l = lightness / 100;
-                  const c = (1 - Math.abs(2 * l - 1)) * s;
-                  const xcol = c * (1 - Math.abs((hueNorm * 6) % 2 - 1));
-                  const m = l - c / 2;
-                  let r, g, b;
-                  if (hueNorm < 1/6) { r = c; g = xcol; b = 0; }
-                  else if (hueNorm < 2/6) { r = xcol; g = c; b = 0; }
-                  else if (hueNorm < 3/6) { r = 0; g = c; b = xcol; }
-                  else if (hueNorm < 4/6) { r = 0; g = xcol; b = c; }
-                  else if (hueNorm < 5/6) { r = xcol; g = 0; b = c; }
-                  else { r = c; g = 0; b = xcol; }
-                  img.data[bidx * 4 + 0] = (r + m) * 255;
-                  img.data[bidx * 4 + 1] = (g + m) * 255;
-                  img.data[bidx * 4 + 2] = (b + m) * 255;
-                  img.data[bidx * 4 + 3] = 255;
-                }
-              }
-              ctx.putImageData(img, 0, 0);
-              return;
-            }
-          }
-        }
-      }
-      // Run many steps per frame for density and speed
-      const loop = () => {
-        for (let i = 0; i < 50; i++) step();
-        requestAnimationFrame(loop);
-      };
-      loop();
     }
   </script>
 </body>
