@@ -1,15 +1,16 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  background-color: #fafafa;
-  padding: 16px;
+  background-color: #121212;
 }
 
 #controls {
   background: rgba(255,255,255,0.8);
   padding: 8px;
   border-radius: 4px;
-  margin: 0 auto 20px auto;
-  width: fit-content;
 }
 
 #canvas {
@@ -17,12 +18,17 @@ body {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
-  transform: scale(2.0);
-  transform-origin: top right;
+  transform: scale(2);
+  transform-origin: center right;
 }
 
 .container {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
 } 
