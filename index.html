@@ -8,7 +8,7 @@
       margin: 0;
       background-color: #fafafa;
       padding: 40px;
-      transform: scale(2.3);
+      transform: scale(2.0);
       transform-origin: top;
     }
     #controls {
@@ -24,6 +24,9 @@
       width: 300px;
       height: 300px;
       margin: 0 auto;
+      image-rendering: pixelated; /* Recommended for most browsers */
+      image-rendering: -moz-crisp-edges; /* Firefox */
+      image-rendering: crisp-edges; /* Other browsers/older versions */
     }
   </style>
 </head>
@@ -78,7 +81,7 @@
       console.log("MAX_PARTICLES", MAX_PARTICLES);
       const MAX_WALKER_STEPS = Math.max(w,h) * 5; // Max steps before a walker is considered lost
       
-      const PARTICLES_PER_FRAME = 100; // Number of walkers to process per animation frame
+      const PARTICLES_PER_FRAME = 50; // Number of walkers to process per animation frame
       const MAX_CONSECUTIVE_SPAWN_FAILS_TOTAL = 10000; // If 300 total spawn attempts fail in a row, stop.
       let consecutiveSpawnFails = 0;
       let particlesSinceLastDraw = 0; // Counter for particles since last draw
@@ -86,9 +89,9 @@
 
 
       // --- Color generation (adapted from runColorFill) ---
-      const DLA_SIMILARITY_PERCENT = 0.99; 
-      const DLA_SIMILAR_VARIATION = 5;   
-      const DLA_DISSIMILAR_VARIATION = 40;
+      const DLA_SIMILARITY_PERCENT = 0.98; 
+      const DLA_SIMILAR_VARIATION = 3;   
+      const DLA_DISSIMILAR_VARIATION = 50;
 
       function getDlaNeighborColors(x, y) {
         const colors = [];
@@ -124,9 +127,9 @@
           b: acc.b + col.b / neighborColors.length
         }), { r: 0, g: 0, b: 0 });
         
-        // If 4 or more neighbors are filled, always use similar
+        // If 3 or more neighbors are filled, always use similar
         let useSimilar = false;
-        if (neighborColors.length >= 4) {
+        if (neighborColors.length >= 3) {
           useSimilar = true;
         } else {
           useSimilar = Math.random() < DLA_SIMILARITY_PERCENT;
