@@ -20,6 +20,7 @@ export default function HomePage() {
         <select id="algo" value={selectedAlgorithm} onChange={handleAlgorithmChange}>
         <option value="colorfill">Jump Splat</option>
         <option value="dla">Crystal Growth</option>
+        <option value="spiral">Spiral</option>
         </select>
       </div>
 
