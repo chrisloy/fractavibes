@@ -82,13 +82,13 @@
       const MAX_CONSECUTIVE_SPAWN_FAILS_TOTAL = 10000; // If 300 total spawn attempts fail in a row, stop.
       let consecutiveSpawnFails = 0;
       let particlesSinceLastDraw = 0; // Counter for particles since last draw
-      const DRAW_INTERVAL = 1; // Draw after this many particles are added
+      const DRAW_INTERVAL = 5; // Draw after this many particles are added
 
 
       // --- Color generation (adapted from runColorFill) ---
-      const DLA_SIMILARITY_PERCENT = 0.90; 
-      const DLA_SIMILAR_VARIATION = 20;   
-      const DLA_DISSIMILAR_VARIATION = 50;
+      const DLA_SIMILARITY_PERCENT = 0.99; 
+      const DLA_SIMILAR_VARIATION = 5;   
+      const DLA_DISSIMILAR_VARIATION = 40;
 
       function getDlaNeighborColors(x, y) {
         const colors = [];
@@ -124,7 +124,13 @@
           b: acc.b + col.b / neighborColors.length
         }), { r: 0, g: 0, b: 0 });
         
-        let useSimilar = Math.random() < DLA_SIMILARITY_PERCENT;
+        // If 4 or more neighbors are filled, always use similar
+        let useSimilar = false;
+        if (neighborColors.length >= 4) {
+          useSimilar = true;
+        } else {
+          useSimilar = Math.random() < DLA_SIMILARITY_PERCENT;
+        }
         const variation = useSimilar ? DLA_SIMILAR_VARIATION : DLA_DISSIMILAR_VARIATION;
         
         return {
