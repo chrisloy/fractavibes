@@ -1,9 +1,7 @@
 body {
   margin: 0;
   background-color: #fafafa;
-  padding: 40px;
-  transform: scale(2.0);
-  transform-origin: top;
+  padding: 16px;
 }
 
 #controls {
@@ -19,10 +17,12 @@ body {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
+  transform: scale(2.0);
+  transform-origin: top right;
 }
 
 .container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
 } 

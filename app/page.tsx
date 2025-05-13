@@ -3,10 +3,10 @@
 import React from 'react';
 import { useState, useRef } from 'react';
 import CanvasComponent from '../components/CanvasComponent';
-import '../styles/globals.css';
+import '../styles/globals.scss';
 
 export default function HomePage() {
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('dla');
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('colorfill');
   const canvasRef = useRef(null);
 
   const handleAlgorithmChange = (event) => {
@@ -14,12 +14,12 @@ export default function HomePage() {
   };
 
   return (
-    <>
+    <div className="container">
       <div id="controls">
         <label htmlFor="algo">Algorithm:</label>
         <select id="algo" value={selectedAlgorithm} onChange={handleAlgorithmChange}>
-          <option value="dla">Crystal Growth (DLA)</option>
-          <option value="colorfill">Color-Influenced Fill</option>
+        <option value="colorfill">Jump Splat</option>
+        <option value="dla">Crystal Growth</option>
         </select>
       </div>
 
@@ -29,6 +29,6 @@ export default function HomePage() {
         width={400}
         height={400}
       />
-    </>
+    </div>
   );
 } 

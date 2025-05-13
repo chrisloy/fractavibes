@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/globals.css';
+import '../styles/globals.scss';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,9 +10,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
-        <div className="container">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );
