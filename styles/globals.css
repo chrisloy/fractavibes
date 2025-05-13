@@ -1,0 +1,28 @@
+body {
+  margin: 0;
+  background-color: #fafafa;
+  padding: 40px;
+  transform: scale(2.0);
+  transform-origin: top;
+}
+
+#controls {
+  background: rgba(255,255,255,0.8);
+  padding: 8px;
+  border-radius: 4px;
+  margin: 0 auto 20px auto;
+  width: fit-content;
+}
+
+#canvas {
+  cursor: pointer;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+} 
