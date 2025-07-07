@@ -11,6 +11,12 @@ export default function HomePage() {
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 400, height: 400 });
   const canvasRef = useRef(null);
 
+  const algorithms = [
+    { key: 'colorfill', name: 'Jump Splat' },
+    { key: 'dla', name: 'Crystal Growth' },
+    { key: 'spiral', name: 'Spiral' }
+  ];
+
   // Set initial canvas dimensions once when component mounts
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -21,21 +27,19 @@ export default function HomePage() {
     setMounted(true);
   }, []);
 
-  const handleAlgorithmChange = (event) => {
-    setSelectedAlgorithm(event.target.value);
+  const cycleAlgorithm = () => {
+    const currentIndex = algorithms.findIndex(algo => algo.key === selectedAlgorithm);
+    const nextIndex = (currentIndex + 1) % algorithms.length;
+    setSelectedAlgorithm(algorithms[nextIndex].key);
+  };
+
+  const getCurrentAlgorithmName = () => {
+    const current = algorithms.find(algo => algo.key === selectedAlgorithm);
+    return current ? current.name : 'Unknown';
   };
 
   return (
-    <div className="container">
-      <div id="controls">
-        <label htmlFor="algo">Algorithm:</label>
-        <select id="algo" value={selectedAlgorithm} onChange={handleAlgorithmChange}>
-        <option value="colorfill">Jump Splat</option>
-        <option value="dla">Crystal Growth</option>
-        <option value="spiral">Spiral</option>
-        </select>
-      </div>
-
+    <div className="app-container">
       {mounted && (
         <CanvasComponent
           ref={canvasRef}
@@ -44,6 +48,16 @@ export default function HomePage() {
           height={canvasDimensions.height}
         />
       )}
+      
+      <div className="controls">
+        <button className="algorithm-button" onClick={cycleAlgorithm}>
+          {getCurrentAlgorithmName()}
+        </button>
+      </div>
+
+      <footer className="footer">
+        Built by <a href="https://chrisloy.dev" target="_blank" rel="noopener noreferrer">Chris Loy</a>
+      </footer>
     </div>
   );
 } 
