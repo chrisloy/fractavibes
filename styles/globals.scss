@@ -84,4 +84,13 @@ body {
   transform-origin: center;
   position: relative;
   z-index: 1;
+  
+  /* Prevent mobile touch highlights and selection */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
 } 
