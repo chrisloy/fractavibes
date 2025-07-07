@@ -5,9 +5,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <title>fractavibes</title>
-        <meta name="description" content="Generative art algorithms" />
-        <link rel="icon" href="/favicon.ico" />
+        <title>fractavibes | generative art</title>
+        <meta name="description" content="Generative art algorithms that run in your browser" />
+        <link rel="icon" type="image/png" href="/favicon.png" />
       </head>
       <body>
         {children}
