@@ -24,8 +24,9 @@ const CanvasComponent = forwardRef(({ width, height, algorithm }: CanvasComponen
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d', { willReadFrequently: true });
+    console.log("Canvas size", width, "x", height);
     resetCanvas(context);
-  }, [width, height, algorithm]);
+  }, []);
 
   const handleClick = (event) => {
     const canvas = canvasRef.current;
