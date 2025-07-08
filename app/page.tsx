@@ -14,7 +14,7 @@ export default function HomePage() {
   const algorithms = [
     { key: 'colorfill', name: 'Jump Splat' },
     { key: 'dla', name: 'Crystal Growth' },
-    { key: 'spiral', name: 'Spiral' }
+    // { key: 'spiral', name: 'Spiral' }
   ];
 
   // Set initial canvas dimensions once when component mounts
