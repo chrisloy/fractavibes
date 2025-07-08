@@ -14,6 +14,7 @@ export default function HomePage() {
   const algorithms = [
     { key: 'colorfill', name: 'Jump Splat' },
     { key: 'dla', name: 'Crystal Growth' },
+    { key: 'inkdrop', name: 'Ink Drop' },
     // { key: 'spiral', name: 'Spiral' }
   ];
 

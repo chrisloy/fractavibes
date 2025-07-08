@@ -2,6 +2,7 @@ import React, { useRef, useEffect, forwardRef, useImperativeHandle } from 'react
 import { runDLA } from '../lib/dla';
 import { runColorFill } from '../lib/colorfill';
 import { runSpiral } from '../lib/spiral';
+import { runInkDrop } from '../lib/inkdrop';
 interface CanvasComponentProps {
   width: number;
   height: number;
@@ -49,6 +50,8 @@ const CanvasComponent = forwardRef(({ width, height, algorithm }: CanvasComponen
       currentAnimation.current = runColorFill(context, canvas.width, canvas.height, x, y);
     } else if (algorithm === 'spiral') {
       currentAnimation.current = runSpiral(context, canvas.width, canvas.height, x, y);
+    } else if (algorithm === 'inkdrop') {
+      currentAnimation.current = runInkDrop(context, canvas.width, canvas.height, x, y);
     } else {
       alert('Algorithm not implemented yet: ' + algorithm);
     }
