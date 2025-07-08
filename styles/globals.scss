@@ -6,7 +6,7 @@
 
 body {
   margin: 0;
-  background: linear-gradient(to right, #121212, #000000);
+  background: 'black';
 }
 
 .app-container {
@@ -38,12 +38,13 @@ body {
   cursor: pointer;
   backdrop-filter: blur(5px);
   transition: all 0.3s ease;
-  opacity: 0.7;
+  opacity: 0.3;
   
   &:hover {
     background: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-2px);
+    opacity: 0.7;
   }
   
   &:active {
@@ -59,10 +60,16 @@ body {
   z-index: 10;
   color: rgba(255, 255, 255, 0.6);
   background: rgba(255, 255, 255, 0.2);
+  opacity: 0.3;
   padding: 5px 10px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 400;
+  transition: all 0.3s ease;
+
+  &:hover {
+    opacity: 0.7;
+  }
   
   a {
     color: rgba(255, 255, 255, 0.8);

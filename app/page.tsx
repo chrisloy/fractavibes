@@ -17,11 +17,13 @@ export default function HomePage() {
     // { key: 'spiral', name: 'Spiral' }
   ];
 
+  const SCALE = 2.0;
+
   // Set initial canvas dimensions once when component mounts
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const initialWidth = Math.floor(window.innerWidth * 0.5);
-      const initialHeight = Math.floor(window.innerHeight * 0.5);
+      const initialWidth = Math.floor(window.innerWidth / SCALE);
+      const initialHeight = Math.floor(window.innerHeight / SCALE);
       setCanvasDimensions({ width: initialWidth, height: initialHeight });
     }
     setMounted(true);
